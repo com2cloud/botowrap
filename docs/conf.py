@@ -8,7 +8,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath(".."))
 
 # Import project metadata
-import botowrap  # noqa: E402
+import botowrap
 
 # Project information
 project = "botowrap"

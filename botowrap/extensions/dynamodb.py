@@ -42,6 +42,7 @@ class DynamoDBExtension(BaseExtension):
         """Initialize DynamoDB extension with the given configuration.
 
         Args:
+        ----
             config: Configuration options for the DynamoDB extension
 
         """
@@ -55,6 +56,7 @@ class DynamoDBExtension(BaseExtension):
         created from this session.
 
         Args:
+        ----
             session: The boto3 session to attach to
 
         """
@@ -68,6 +70,7 @@ class DynamoDBExtension(BaseExtension):
         """Detach the DynamoDB extension from the given session.
 
         Args:
+        ----
             session: The boto3 session to detach from
 
         """
@@ -86,6 +89,7 @@ class DynamoDBExtension(BaseExtension):
         of the client's base classes.
 
         Args:
+        ----
             **kwargs: Keyword arguments from the creating-client-class event
 
         """
@@ -98,6 +102,7 @@ class DynamoDBExtension(BaseExtension):
         """Unregister all handlers for a specific client instance.
 
         Args:
+        ----
             client: The client instance to unregister handlers from
 
         """
@@ -120,6 +125,7 @@ class _DocumentClientBootstrapper:
         """Initialize the bootstrapper and attach document client functionality.
 
         Args:
+        ----
             *args: Positional arguments to pass to parent initializer
             **kwargs: Keyword arguments to pass to parent initializer
 
@@ -127,13 +133,15 @@ class _DocumentClientBootstrapper:
         super().__init__(*args, **kwargs)
         # Cast self to BaseClient since this mixin is intended to be used with BaseClient
         self._config = DynamoDBConfig()  # Add default config
-        DynamoDBDocumentClient(cast(BaseClient, self))
+        DynamoDBDocumentClient(cast("BaseClient", self))
 
     def _get_config(self) -> DynamoDBConfig:
         """Get the DynamoDB configuration.
 
-        Returns:
+        Returns
+        -------
             The DynamoDB configuration
+
         """
         return self._config
 
@@ -150,6 +158,7 @@ class _DocumentClientBootstrapper:
         """Handle throttling retries for DynamoDB operations.
 
         Args:
+        ----
             response: Response from the service
             endpoint: Endpoint used for the request
             operation: Operation being performed
@@ -159,7 +168,9 @@ class _DocumentClientBootstrapper:
             **_: Additional keyword arguments
 
         Returns:
+        -------
             bool: True if the operation should be retried, False otherwise
+
         """
         if (
             caught_exception is not None
@@ -177,10 +188,13 @@ def _wrap_retry_handler(handler: Callable[..., bool]) -> Callable[..., None]:
     """Wrap a retry handler to satisfy type checking while preserving behavior.
 
     Args:
+    ----
         handler: The original handler that returns a bool
 
     Returns:
+    -------
         A wrapped handler that satisfies the event system's type hints
+
     """
 
     def wrapped(*args: Any, **kwargs: Any) -> None:
@@ -200,17 +214,20 @@ class DynamoDBDocumentClient:
     The wrapper is automatically attached to new DynamoDB client instances via the
     _DocumentClientBootstrapper mixin.
 
-    Attributes:
+    Attributes
+    ----------
         client: The underlying botocore DynamoDB client
         serializer: TypeSerializer for converting Python types to DynamoDB format
         deserializer: TypeDeserializer for converting DynamoDB format to Python types
         config: Configuration options for the DynamoDB extension
+
     """
 
     def __init__(self, client: BaseClient) -> None:
         """Initialize DynamoDB document client wrapper.
 
         Args:
+        ----
             client: The DynamoDB client to wrap
 
         """
@@ -293,6 +310,7 @@ class DynamoDBDocumentClient:
         by collecting all items from multiple requests.
 
         Args:
+        ----
             class_attrs: Dictionary of class attributes to modify
             **_: Additional keyword arguments (ignored)
 
@@ -302,10 +320,12 @@ class DynamoDBDocumentClient:
             """Execute a Query operation, automatically handling pagination.
 
             Args:
+            ----
                 self: The DynamoDB client instance
                 **kw: Keyword arguments to pass to the query method
 
             Returns:
+            -------
                 Dict with Items key containing all results
 
             """
@@ -321,10 +341,12 @@ class DynamoDBDocumentClient:
             """Execute a Scan operation, automatically handling pagination.
 
             Args:
+            ----
                 self: The DynamoDB client instance
                 **kw: Keyword arguments to pass to the scan method
 
             Returns:
+            -------
                 Dict with Items key containing all results
 
             """
@@ -345,6 +367,7 @@ class DynamoDBDocumentClient:
         """Inject CreatedAt and UpdatedAt timestamps into items.
 
         Args:
+        ----
             params: The parameters for the DynamoDB operation
             operation_name: The name of the operation being performed
             **_: Additional keyword arguments (ignored)
@@ -361,6 +384,7 @@ class DynamoDBDocumentClient:
         """Serialize Python types to DynamoDB AttributeValue format.
 
         Args:
+        ----
             params: The parameters for the DynamoDB operation
             **_: Additional keyword arguments (ignored)
 
@@ -370,9 +394,11 @@ class DynamoDBDocumentClient:
             """Convert a Python value to a DynamoDB AttributeValue.
 
             Args:
+            ----
                 v: The Python value to convert
 
             Returns:
+            -------
                 A DynamoDB AttributeValue dictionary
 
             """
@@ -394,6 +420,7 @@ class DynamoDBDocumentClient:
         """Deserialize a single item from DynamoDB format.
 
         Args:
+        ----
             http: The HTTP response
             parsed: The parsed response data
             **_: Additional keyword arguments (ignored)
@@ -408,6 +435,7 @@ class DynamoDBDocumentClient:
         """Deserialize multiple items from DynamoDB format.
 
         Args:
+        ----
             http: The HTTP response
             parsed: The parsed response data
             **_: Additional keyword arguments (ignored)
@@ -423,6 +451,7 @@ class DynamoDBDocumentClient:
         """Deserialize items from a batch operation.
 
         Args:
+        ----
             http: The HTTP response
             parsed: The parsed response data
             **_: Additional keyword arguments (ignored)
@@ -448,6 +477,7 @@ class DynamoDBDocumentClient:
         """Handle throttling retries for DynamoDB operations.
 
         Args:
+        ----
             response: Response from the service
             endpoint: Endpoint used for the request
             operation: Operation being performed
@@ -457,7 +487,9 @@ class DynamoDBDocumentClient:
             **_: Additional keyword arguments
 
         Returns:
+        -------
             bool: True if the operation should be retried, False otherwise
+
         """
         if (
             caught_exception is not None
@@ -474,6 +506,7 @@ class DynamoDBDocumentClient:
         """Log consumed capacity information from DynamoDB responses.
 
         Args:
+        ----
             parsed: Parsed response data
             model: Operation model
             http: HTTP response object (optional)

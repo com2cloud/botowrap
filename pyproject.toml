@@ -98,13 +98,13 @@ select = [
     "SIM", # flake8-simplify
     "TCH", # flake8-type-checking
     "RUF", # ruff-specific rules
-    "E402", # module level import not at top of file
 ]
 
 ignore = [
     "E231",  # Missing whitespace after ','
     "D100",  # Missing docstring in public module
     "D104",  # Missing docstring in public package
+    "E402"
 ]
 
 [tool.ruff.format]
