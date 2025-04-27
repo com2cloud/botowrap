@@ -3,7 +3,7 @@
 Provides base classes and managers for extending boto3 clients.
 """
 
-from typing import List
+from typing import List, Optional
 
 import boto3
 from boto3.session import Session as BotoSession
@@ -27,7 +27,7 @@ class BaseExtension:
 class ExtensionManager:
     """Holds and bootstraps a collection of BaseExtension instances."""
 
-    def __init__(self, session: BotoSession = None):
+    def __init__(self, session: Optional[BotoSession] = None):
         """Initialize with an optional boto3 session."""
         self.session = session or boto3.DEFAULT_SESSION or BotoSession()
         self._extensions: List[BaseExtension] = []

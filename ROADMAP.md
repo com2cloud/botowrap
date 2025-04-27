@@ -88,4 +88,4 @@ We welcome contributions! If you'd like to help implement any of these features 
 
 ## Note
 
-This roadmap is a living document and may change based on user feedback and project priorities. 
+This roadmap is a living document and may change based on user feedback and project priorities.

@@ -10,7 +10,7 @@ from botowrap.core import BaseExtension, ExtensionManager
 class MockExtension(BaseExtension):
     """Mock extension for testing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a MockExtension for testing."""
         self.attached = False
         self.detached = False
@@ -30,7 +30,7 @@ class MockExtension(BaseExtension):
 class TestBaseExtension:
     """Tests for the BaseExtension class."""
 
-    def test_base_extension_methods(self):
+    def test_base_extension_methods(self) -> None:
         """Test that BaseExtension requires implementation of attach and detach."""
         ext = BaseExtension()
         session = boto3.Session()
@@ -45,20 +45,20 @@ class TestBaseExtension:
 class TestExtensionManager:
     """Tests for the ExtensionManager class."""
 
-    def test_init_default_session(self):
+    def test_init_default_session(self) -> None:
         """Test that ExtensionManager initializes with default session if none provided."""
         mgr = ExtensionManager()
         assert mgr.session is not None
         assert isinstance(mgr.session, BotoSession)
         assert len(mgr._extensions) == 0
 
-    def test_init_with_session(self):
+    def test_init_with_session(self) -> None:
         """Test that ExtensionManager initializes with provided session."""
         session = boto3.Session()
         mgr = ExtensionManager(session=session)
         assert mgr.session is session
 
-    def test_register(self):
+    def test_register(self) -> None:
         """Test registering an extension."""
         mgr = ExtensionManager()
         ext = MockExtension()
@@ -66,7 +66,7 @@ class TestExtensionManager:
         assert len(mgr._extensions) == 1
         assert mgr._extensions[0] is ext
 
-    def test_bootstrap(self):
+    def test_bootstrap(self) -> None:
         """Test bootstrapping attaches all registered extensions."""
         mgr = ExtensionManager()
         ext1 = MockExtension()
@@ -81,7 +81,7 @@ class TestExtensionManager:
         assert ext1.session is mgr.session
         assert ext2.session is mgr.session
 
-    def test_teardown(self):
+    def test_teardown(self) -> None:
         """Test tearing down detaches all registered extensions."""
         mgr = ExtensionManager()
         ext1 = MockExtension()

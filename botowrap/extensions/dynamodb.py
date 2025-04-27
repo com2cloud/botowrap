@@ -8,7 +8,7 @@ import logging
 import random
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from boto3.session import Session as BotoSession
@@ -125,7 +125,68 @@ class _DocumentClientBootstrapper:
 
         """
         super().__init__(*args, **kwargs)
-        DynamoDBDocumentClient(self)
+        # Cast self to BaseClient since this mixin is intended to be used with BaseClient
+        self._config = DynamoDBConfig()  # Add default config
+        DynamoDBDocumentClient(cast(BaseClient, self))
+
+    def _get_config(self) -> DynamoDBConfig:
+        """Get the DynamoDB configuration.
+
+        Returns:
+            The DynamoDB configuration
+        """
+        return self._config
+
+    def _retry_throttling(
+        self,
+        response: Dict[str, Any],
+        endpoint: Any,
+        operation: Any,
+        attempts: int,
+        caught_exception: Optional[ClientError],
+        request_dict: Dict[str, Any],
+        **_: Any,
+    ) -> bool:
+        """Handle throttling retries for DynamoDB operations.
+
+        Args:
+            response: Response from the service
+            endpoint: Endpoint used for the request
+            operation: Operation being performed
+            attempts: Number of attempts made so far
+            caught_exception: Exception that was caught, if any
+            request_dict: Request parameters
+            **_: Additional keyword arguments
+
+        Returns:
+            bool: True if the operation should be retried, False otherwise
+        """
+        if (
+            caught_exception is not None
+            and hasattr(caught_exception, "response")
+            and caught_exception.response.get("Error", {}).get("Code")
+            == "ProvisionedThroughputExceededException"
+            and attempts < self._get_config().max_retries
+        ):
+            time.sleep(random.uniform(0.05, 0.1) * (2**attempts))
+            return True
+        return False
+
+
+def _wrap_retry_handler(handler: Callable[..., bool]) -> Callable[..., None]:
+    """Wrap a retry handler to satisfy type checking while preserving behavior.
+
+    Args:
+        handler: The original handler that returns a bool
+
+    Returns:
+        A wrapped handler that satisfies the event system's type hints
+    """
+
+    def wrapped(*args: Any, **kwargs: Any) -> None:
+        handler(*args, **kwargs)
+
+    return wrapped
 
 
 class DynamoDBDocumentClient:
@@ -143,73 +204,52 @@ class DynamoDBDocumentClient:
         client: The underlying botocore DynamoDB client
         serializer: TypeSerializer for converting Python types to DynamoDB format
         deserializer: TypeDeserializer for converting DynamoDB format to Python types
-        max_retries: Maximum number of retry attempts for throttled requests
-        log_consumed: Whether to log consumed capacity for operations
-        add_pagination: Whether to add pagination helper methods
-        add_timestamps: Whether to automatically inject timestamps into items
-
+        config: Configuration options for the DynamoDB extension
     """
 
     def __init__(self, client: BaseClient) -> None:
-        """Initialize a DynamoDB document client wrapper.
+        """Initialize DynamoDB document client wrapper.
 
         Args:
-            client: The botocore DynamoDB client to wrap
+            client: The DynamoDB client to wrap
 
         """
         self.client = client
         self.serializer = TypeSerializer()
         self.deserializer = TypeDeserializer()
-        cfg = self._get_config()
-        self.max_retries = cfg.max_retries
-        self.log_consumed = cfg.log_consumed
-        self.add_pagination = cfg.add_pagination
-        self.add_timestamps = cfg.add_timestamps
+        self.config = getattr(
+            client, "_config", DynamoDBConfig()
+        )  # Get config from client or use default
         self._register_handlers()
 
-    def _get_config(self) -> DynamoDBConfig:
-        """Get configuration for DynamoDB extension.
-
-        In a real implementation, this would retrieve the config from the Extension instance.
-        For demonstration purposes, this returns a default config.
-
-        Note: In a real implementation, the Extension instance would store its config
-        and make it accessible to client instances.
-        """
-        # In real code, you'd pass config via closure or a weakmap.
-        return DynamoDBConfig()
-
     def _register_handlers(self) -> None:
-        """Register all event handlers for the DynamoDB client.
-
-        This sets up various event handlers based on the configuration:
-        - Pagination helpers (if enabled)
-        - Timestamp injection (if enabled)
-        - Serialization/deserialization for different operations
-        - Retry logic for throttling
-        - Capacity logging (if enabled)
-        """
+        """Register event handlers for DynamoDB document client functionality."""
         ev = self.client.meta.events
 
-        if self.add_pagination:
+        # Add pagination helpers
+        if self.config.add_pagination:
             ev.register(
                 "creating-client-class.dynamodb",
                 self._add_pagination_helpers,
                 unique_id="dynamodb-pagination",
             )
 
-        if self.add_timestamps:
+        # Add timestamp injection
+        if self.config.add_timestamps:
             ev.register(
                 "provide-client-params.dynamodb.*",
                 self._inject_timestamps,
                 unique_id="dynamodb-inject-ts",
             )
 
+        # Add serialization
         ev.register(
             "provide-client-params.dynamodb.*",
             self._serialize_params,
             unique_id="dynamodb-serialize",
         )
+
+        # Add deserialization for different operations
         ev.register(
             "after-call.dynamodb.GetItem",
             self._deserialize_item,
@@ -230,9 +270,21 @@ class DynamoDBDocumentClient:
             self._deserialize_batch,
             unique_id="dynamodb-deserialize-batch",
         )
-        ev.register("needs-retry.dynamodb.*", self._retry_throttling, unique_id="dynamodb-retry")
-        if self.log_consumed:
-            ev.register("after-call.dynamodb.*", self._log_capacity, unique_id="dynamodb-log-cap")
+
+        # Add retry handler for throttling
+        ev.register(
+            "needs-retry.dynamodb.*",
+            _wrap_retry_handler(self._retry_throttling),
+            unique_id="dynamodb-retry",
+        )
+
+        # Add capacity logging
+        if self.config.log_consumed:
+            ev.register(
+                "after-call.dynamodb.*",
+                self._log_capacity,
+                unique_id="dynamodb-log-cap",
+            )
 
     def _add_pagination_helpers(self, class_attrs: Dict[str, Any], **_: Any) -> None:
         """Add pagination helper methods to the DynamoDB client class.
@@ -325,7 +377,7 @@ class DynamoDBDocumentClient:
 
             """
             # Use cast to tell mypy that the return value is a Dict[str, Any]
-            return cast(Dict[str, Any], self.serializer.serialize(v))
+            return cast("Dict[str, Any]", self.serializer.serialize(v))
 
         if "Item" in params:
             params["Item"] = {k: to_attr(v) for k, v in params["Item"].items()}
@@ -389,46 +441,62 @@ class DynamoDBDocumentClient:
         endpoint: Any,
         operation: Any,
         attempts: int,
-        caught_exception: ClientError,
+        caught_exception: Optional[ClientError],
         request_dict: Dict[str, Any],
         **_: Any,
     ) -> bool:
-        """Handle retries for throttled requests.
+        """Handle throttling retries for DynamoDB operations.
 
         Args:
-            response: The response from the DynamoDB operation
-            endpoint: The endpoint that was called
-            operation: The operation that was performed
-            attempts: The number of attempts made so far
-            caught_exception: The exception that was caught
-            request_dict: The request parameters
-            **_: Additional keyword arguments (ignored)
+            response: Response from the service
+            endpoint: Endpoint used for the request
+            operation: Operation being performed
+            attempts: Number of attempts made so far
+            caught_exception: Exception that was caught, if any
+            request_dict: Request parameters
+            **_: Additional keyword arguments
 
         Returns:
-            True if the request should be retried, False otherwise
-
+            bool: True if the operation should be retried, False otherwise
         """
         if (
-            caught_exception.response["Error"]["Code"] == "ProvisionedThroughputExceededException"
-            and attempts < self.max_retries
+            caught_exception is not None
+            and hasattr(caught_exception, "response")
+            and caught_exception.response.get("Error", {}).get("Code")
+            == "ProvisionedThroughputExceededException"
+            and attempts < self.config.max_retries
         ):
             time.sleep(random.uniform(0.05, 0.1) * (2**attempts))
             return True
         return False
 
-    def _log_capacity(self, http: Any, parsed: Dict[str, Any], model: Any, **_: Any) -> None:
-        """Log consumed capacity for DynamoDB operations.
+    def _log_capacity(self, parsed: Dict[str, Any], model: Any, http: Any = None, **_: Any) -> None:
+        """Log consumed capacity information from DynamoDB responses.
 
         Args:
-            http: The HTTP response
-            parsed: The parsed response data
-            model: The response model
-            **_: Additional keyword arguments (ignored)
+            parsed: Parsed response data
+            model: Operation model
+            http: HTTP response object (optional)
+            **_: Additional keyword arguments
 
         """
-        if "ConsumedCapacity" in parsed:
+        if not self.config.log_consumed:
+            return
+
+        if "ConsumedCapacity" not in parsed:
+            return
+
+        capacity = parsed["ConsumedCapacity"]
+        if isinstance(capacity, list):
+            for table_capacity in capacity:
+                logger.info(
+                    "DynamoDB consumed capacity for table %s: %s",
+                    table_capacity.get("TableName", "Unknown"),
+                    table_capacity.get("CapacityUnits", 0),
+                )
+        else:
             logger.info(
-                "Consumed capacity for %s: %s",
-                model.operation_name,
-                parsed["ConsumedCapacity"],
+                "DynamoDB consumed capacity for table %s: %s",
+                capacity.get("TableName", "Unknown"),
+                capacity.get("CapacityUnits", 0),
             )

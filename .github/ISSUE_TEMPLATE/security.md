@@ -26,4 +26,4 @@ If you have a suggested fix, please describe it here.
 **Additional context**
 Add any other context about the vulnerability here.
 
-**Note**: Please do not include sensitive information in your report. If you need to share sensitive information, please contact the maintainers directly. 
+**Note**: Please do not include sensitive information in your report. If you need to share sensitive information, please contact the maintainers directly.

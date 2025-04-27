@@ -17,4 +17,4 @@ A clear and concise description of what's wrong with the documentation.
 If you have a suggestion for how to fix the documentation, please provide it here.
 
 **Additional context**
-Add any other context about the documentation issue here. 
+Add any other context about the documentation issue here.

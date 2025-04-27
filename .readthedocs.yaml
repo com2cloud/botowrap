@@ -28,10 +28,6 @@ tags:
 language:
   - en
 
-version:
-  - latest
-  - stable
-
 formats:
   - html
   - pdf
@@ -108,4 +104,4 @@ dependencies:
   - pygments
   - requests
   - six
-  - snowballstemmer 
+  - snowballstemmer

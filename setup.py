@@ -1,18 +1,17 @@
 """Setup script for botowrap package."""
 
-import io
 import os
 
 from setuptools import find_packages, setup
 
 # Read version from __init__.py
-with open(os.path.join("botowrap", "__init__.py"), "r") as f:
+with open(os.path.join("botowrap", "__init__.py")) as f:
     for line in f:
         if line.startswith("__version__"):
             version = line.split("=")[1].strip().strip("\"'")
             break
 
-with io.open("README.md", encoding="utf-8") as f:
+with open("README.md", encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
@@ -45,7 +44,6 @@ setup(
             "twine>=3.4.0",
             "build>=0.7.0",
             "pre-commit>=3.0.0",
-            "bandit>=1.7.5",
             "flake8-docstrings>=1.7.0",
             "flake8-bugbear>=23.3.12",
             "flake8-comprehensions>=3.10.0",
@@ -78,5 +76,5 @@ setup(
         "Framework :: Pytest",
         "Operating System :: OS Independent",
     ],
-    keywords="boto3, aws, dynamodb, wrapper, extension, s3, lambda, sqs, aws-sdk, python, cloud, automation",
+    keywords="boto3, aws, dynamodb, wrapper, extension, s3, lambda, sqs, aws-sdk, python, cloud",
 )

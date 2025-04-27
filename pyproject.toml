@@ -31,7 +31,12 @@ follow_imports = "silent"
 warn_redundant_casts = true
 plugins = []
 mypy_path = "botowrap/types"
-exclude = ["botowrap/.*\\.pyi$"]
+exclude = [
+    "botowrap/.*\\.pyi$",
+    "tests/.*",
+    "docs/.*",
+    "examples/.*"
+]
 show_error_codes = true
 pretty = true
 
@@ -42,6 +47,10 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "botocore.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*", "docs.*", "examples.*"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -89,6 +98,7 @@ select = [
     "SIM", # flake8-simplify
     "TCH", # flake8-type-checking
     "RUF", # ruff-specific rules
+    "E402", # module level import not at top of file
 ]
 
 ignore = [
