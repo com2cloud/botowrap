@@ -67,13 +67,13 @@ can be configured with these options:
     ddb_config = DynamoDBConfig(
         # Number of retries for throttling exceptions
         max_retries=5,
-        
+
         # Whether to log DynamoDB consumed capacity
         log_consumed=True,
-        
+
         # Add pagination helpers (scan_all, query_all)
         add_pagination=True,
-        
+
         # Add automatic CreatedAt/UpdatedAt timestamps
         add_timestamps=True
     )
@@ -90,16 +90,16 @@ You can register multiple extensions with the same manager:
 
     from botowrap.core import ExtensionManager
     from botowrap.extensions.dynamodb import DynamoDBExtension, DynamoDBConfig
-    
+
     # Create manager
     mgr = ExtensionManager()
-    
+
     # Register DynamoDB extension
     mgr.register(DynamoDBExtension(DynamoDBConfig()))
-    
+
     # Register other extensions as they become available
     # mgr.register(OtherExtension(OtherConfig()))
-    
+
     # Bootstrap all extensions
     mgr.bootstrap()
 
@@ -112,18 +112,18 @@ If you need to use a specific boto3 session:
 
     import boto3
     from botowrap.core import ExtensionManager
-    
+
     # Create a custom session
     session = boto3.Session(
         region_name='us-west-2',
         profile_name='development'
     )
-    
+
     # Create manager with the custom session
     mgr = ExtensionManager(session=session)
-    
+
     # Register and bootstrap extensions as normal
     # ...
-    
+
     # Now create clients using your session
     ddb = session.client('dynamodb')  # Enhanced client

@@ -5,12 +5,12 @@ import pytest
 from moto import mock_aws
 
 from botowrap.core import ExtensionManager
-from botowrap.extensions.dynamodb import DynamoDBExtension, DynamoDBConfig
+from botowrap.extensions.dynamodb import DynamoDBConfig, DynamoDBExtension
 
 
 @pytest.fixture
 def aws_credentials():
-    """Mocked AWS Credentials for moto."""
+    """Mock AWS Credentials for moto."""
     boto3.setup_default_session(
         aws_access_key_id="testing",
         aws_secret_access_key="testing",

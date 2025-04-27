@@ -1,3 +1,8 @@
+"""Core functionality for botowrap extensions.
+
+Provides base classes and managers for extending boto3 clients.
+"""
+
 from typing import List
 
 import boto3
@@ -5,24 +10,25 @@ from boto3.session import Session as BotoSession
 
 
 class BaseExtension:
-    """
-    Base class for all client-extension wrappers.
+    """Base class for all client-extension wrappers.
+
     Subclasses must implement attach(session) and detach(session).
     """
 
     def attach(self, session: BotoSession) -> None:
+        """Attach this extension to the given boto3 session."""
         raise NotImplementedError
 
     def detach(self, session: BotoSession) -> None:
+        """Detach this extension from the given boto3 session."""
         raise NotImplementedError
 
 
 class ExtensionManager:
-    """
-    Holds and bootstraps a collection of BaseExtension instances.
-    """
+    """Holds and bootstraps a collection of BaseExtension instances."""
 
     def __init__(self, session: BotoSession = None):
+        """Initialize with an optional boto3 session."""
         self.session = session or boto3.DEFAULT_SESSION or BotoSession()
         self._extensions: List[BaseExtension] = []
 

@@ -1,9 +1,8 @@
 """Type stubs for DynamoDB extension."""
 
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-import boto3
 import botocore
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from boto3.session import Session as BotoSession
@@ -18,9 +17,7 @@ class DynamoDBConfig:
     add_timestamps: bool = True
 
 class DynamoDBExtension(BaseExtension):
-    """
-    Attaches all DynamoDB "document client" behavior onto boto3.client('dynamodb').
-    """
+    """Attaches all DynamoDB "document client" behavior onto boto3.client('dynamodb')."""
 
     SERVICE: str
     config: DynamoDBConfig

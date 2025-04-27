@@ -1,11 +1,8 @@
 """Tests for the DynamoDB extension."""
 
-import boto3
 import pytest
-from moto import mock_aws
 
-from botowrap.core import ExtensionManager
-from botowrap.extensions.dynamodb import DynamoDBExtension, DynamoDBConfig
+from botowrap.extensions.dynamodb import DynamoDBConfig, DynamoDBExtension
 
 
 class TestDynamoDBConfig:
@@ -22,10 +19,7 @@ class TestDynamoDBConfig:
     def test_custom_config(self):
         """Test custom configuration values."""
         config = DynamoDBConfig(
-            max_retries=10,
-            log_consumed=False,
-            add_pagination=False,
-            add_timestamps=False
+            max_retries=10, log_consumed=False, add_pagination=False, add_timestamps=False
         )
         assert config.max_retries == 10
         assert config.log_consumed is False
@@ -47,18 +41,18 @@ class TestDynamoDBExtension:
         config = DynamoDBConfig()
         extension = DynamoDBExtension(config)
         assert extension.config is config
-        assert extension.SERVICE == 'dynamodb'
-        
+        assert extension.SERVICE == "dynamodb"
+
     @pytest.mark.skip("Integration test requires moto setup")
     def test_serialization_deserialization(self):
         """Test automatic serialization and deserialization."""
         pass
-        
+
     @pytest.mark.skip("Integration test requires moto setup")
     def test_timestamps(self):
         """Test automatic timestamp insertion."""
         pass
-        
+
     @pytest.mark.skip("Integration test requires moto setup")
     def test_pagination_helpers(self):
         """Test pagination helpers are added."""

@@ -1,12 +1,15 @@
+"""Setup script for botowrap package."""
+
 import io
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 # Read version from __init__.py
 with open(os.path.join("botowrap", "__init__.py"), "r") as f:
     for line in f:
         if line.startswith("__version__"):
-            version = line.split("=")[1].strip().strip('"\'')
+            version = line.split("=")[1].strip().strip("\"'")
             break
 
 with io.open("README.md", encoding="utf-8") as f:
@@ -17,16 +20,14 @@ setup(
     version=version,
     author="Denys Melnyk",
     author_email="Com2Cloud@com2cloud.com",
-    description="A modular framework for extending boto3 clients with automatic enhancements, wrappers, and developer-friendly features",
+    description="A modular framework for extending boto3 clients with enhancements and features",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/com2cloud/botowrap",
     license="MIT",
     packages=find_packages(),
     python_requires=">=3.7",
-    install_requires=[
-        "boto3>=1.17.0"
-    ],
+    install_requires=["boto3>=1.17.0"],
     extras_require={
         "dev": [
             "pytest>=6.0.0",
@@ -43,7 +44,7 @@ setup(
         ],
     },
     package_data={
-        "botowrap": ["py.typed"],
+        "botowrap": ["py.typed", "**/*.pyi"],
     },
     classifiers=[
         "Development Status :: 4 - Beta",

@@ -5,8 +5,8 @@ from typing import List, Optional
 from boto3.session import Session as BotoSession
 
 class BaseExtension:
-    """
-    Base class for all client‐extension wrappers.
+    """Base class for all client-extension wrappers.
+
     Subclasses must implement attach(session) and detach(session).
     """
 
@@ -14,9 +14,7 @@ class BaseExtension:
     def detach(self, session: BotoSession) -> None: ...
 
 class ExtensionManager:
-    """
-    Holds and bootstraps a collection of BaseExtension instances.
-    """
+    """Holds and bootstraps a collection of BaseExtension instances."""
 
     session: BotoSession
     _extensions: List[BaseExtension]

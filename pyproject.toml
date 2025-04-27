@@ -12,7 +12,7 @@ line_length = 100
 known_first_party = ["botowrap"]
 
 [tool.mypy]
-python_version = "3.7"
+python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -21,6 +21,11 @@ check_untyped_defs = true
 disallow_untyped_decorators = true
 no_implicit_optional = true
 strict_optional = true
+follow_imports = "silent"
+warn_redundant_casts = true
+plugins = []
+mypy_path = "botowrap/types"
+exclude = ["botowrap/.*\\.pyi$"]
 
 [[tool.mypy.overrides]]
 module = "boto3.*"
@@ -33,3 +38,29 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+
+[tool.ruff]
+line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "botowrap/cli.py",
+    "botowrap/cli.pyi",
+    "botowrap/__init__.pyi",
+    "venv",
+]
+[tool.ruff.lint]
+
+select = [
+    "E501",  # line length
+    "F401",  # unused import
+    "F841",  # local variable assigned but never used
+    "F403",  # 'from module import *' used; unable to detect undefined names
+    "F405",  # name may be undefined, or defined from star imports: module
+    "F821",  # undefined name
+    "E722",  # do not use bare 'except',
+    "E402",  # module level import not at top of file
+    "D",
+]
+
+ignore = ["E231"]

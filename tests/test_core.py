@@ -1,7 +1,7 @@
 """Tests for botowrap core functionality."""
 
-import pytest
 import boto3
+import pytest
 from boto3.session import Session as BotoSession
 
 from botowrap.core import BaseExtension, ExtensionManager
@@ -11,6 +11,7 @@ class MockExtension(BaseExtension):
     """Mock extension for testing."""
 
     def __init__(self):
+        """Initialize a MockExtension for testing."""
         self.attached = False
         self.detached = False
         self.session = None
@@ -33,10 +34,10 @@ class TestBaseExtension:
         """Test that BaseExtension requires implementation of attach and detach."""
         ext = BaseExtension()
         session = boto3.Session()
-        
+
         with pytest.raises(NotImplementedError):
             ext.attach(session)
-            
+
         with pytest.raises(NotImplementedError):
             ext.detach(session)
 
@@ -56,7 +57,7 @@ class TestExtensionManager:
         session = boto3.Session()
         mgr = ExtensionManager(session=session)
         assert mgr.session is session
-        
+
     def test_register(self):
         """Test registering an extension."""
         mgr = ExtensionManager()
@@ -64,7 +65,7 @@ class TestExtensionManager:
         mgr.register(ext)
         assert len(mgr._extensions) == 1
         assert mgr._extensions[0] is ext
-        
+
     def test_bootstrap(self):
         """Test bootstrapping attaches all registered extensions."""
         mgr = ExtensionManager()
@@ -72,14 +73,14 @@ class TestExtensionManager:
         ext2 = MockExtension()
         mgr.register(ext1)
         mgr.register(ext2)
-        
+
         mgr.bootstrap()
-        
+
         assert ext1.attached
         assert ext2.attached
         assert ext1.session is mgr.session
         assert ext2.session is mgr.session
-        
+
     def test_teardown(self):
         """Test tearing down detaches all registered extensions."""
         mgr = ExtensionManager()
@@ -87,10 +88,10 @@ class TestExtensionManager:
         ext2 = MockExtension()
         mgr.register(ext1)
         mgr.register(ext2)
-        
+
         mgr.bootstrap()
         mgr.teardown()
-        
+
         assert ext1.detached
         assert ext2.detached
         assert ext1.session is mgr.session

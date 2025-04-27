@@ -79,7 +79,7 @@ pip install -e ".[dev]"
 
 When creating a new extension:
 
-1. Create a new file in `botowrap/extensions/` 
+1. Create a new file in `botowrap/extensions/`
 2. Implement the `BaseExtension` interface
 3. Write comprehensive tests
 4. Update documentation
@@ -104,19 +104,19 @@ class MyServiceConfig:
 class MyServiceExtension(BaseExtension):
     """
     Extension for the my-service client.
-    
+
     Detailed description of what this extension does...
     """
     SERVICE = 'my-service'
-    
+
     def __init__(self, config: MyServiceConfig):
         self.config = config
         self._client_instances = []
-        
+
     def attach(self, session: BotoSession) -> None:
         """Attach this extension to the session."""
         # Implementation...
-        
+
     def detach(self, session: BotoSession) -> None:
         """Detach this extension from the session."""
         # Implementation...

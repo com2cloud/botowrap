@@ -1,5 +1,4 @@
-"""
-Botowrap - A modular framework for extending boto3 clients with enhancements.
+"""Botowrap - A modular framework for extending boto3 clients with enhancements.
 
 This package provides a way to add functionality to boto3 clients through
 extensions that attach to boto3 sessions. Currently supports enhanced DynamoDB
@@ -13,7 +12,7 @@ from .extensions.dynamodb import DynamoDBConfig, DynamoDBExtension
 
 __all__ = [
     "BaseExtension",
-    "ExtensionManager",
-    "DynamoDBExtension",
     "DynamoDBConfig",
+    "DynamoDBExtension",
+    "ExtensionManager",
 ]

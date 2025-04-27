@@ -11,12 +11,12 @@ developer-friendly features while maintaining the standard boto3 interface.
 
 Out of the box it provides:
 
-- **DynamoDBDocumentExtension**  
-  - Python↔DynamoDB (de)serialization  
-  - Auto‐`CreatedAt`/`UpdatedAt` timestamps  
-  - Jittered exponential backoff on throttling  
-  - `query_all`/`scan_all` pagination helpers  
-  - ConsumedCapacity logging  
+- **DynamoDBDocumentExtension**
+  - Python↔DynamoDB (de)serialization
+  - Auto‐`CreatedAt`/`UpdatedAt` timestamps
+  - Jittered exponential backoff on throttling
+  - `query_all`/`scan_all` pagination helpers
+  - ConsumedCapacity logging
 
 ## Installation
 
@@ -145,13 +145,13 @@ The DynamoDB extension can be configured:
 ddb_config = DynamoDBConfig(
     # Number of retries for throttling (default: 5)
     max_retries=8,
-    
+
     # Whether to log consumed capacity (default: True)
     log_consumed=True,
-    
+
     # Whether to add pagination helpers (default: True)
     add_pagination=True,
-    
+
     # Whether to add CreatedAt/UpdatedAt timestamps (default: True)
     add_timestamps=True
 )
@@ -172,14 +172,14 @@ from botowrap.core import BaseExtension
 
 class MyServiceExtension(BaseExtension):
     SERVICE = 'my-service'
-    
+
     def __init__(self, config):
         self.config = config
-        
+
     def attach(self, session):
         # Add functionality to the session
         pass
-        
+
     def detach(self, session):
         # Remove functionality from the session
         pass
