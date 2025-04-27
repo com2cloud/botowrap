@@ -2,6 +2,10 @@
 
 [![Python Package](https://github.com/com2cloud/botowrap/actions/workflows/python-package.yml/badge.svg)](https://github.com/com2cloud/botowrap/actions/workflows/python-package.yml)
 [![PyPI version](https://badge.fury.io/py/botowrap.svg)](https://badge.fury.io/py/botowrap)
+[![PyPI downloads](https://img.shields.io/pypi/dm/botowrap.svg)](https://pypi.org/project/botowrap/)
+[![Codecov](https://codecov.io/gh/com2cloud/botowrap/branch/main/graph/badge.svg)](https://codecov.io/gh/com2cloud/botowrap)
+[![Documentation Status](https://readthedocs.org/projects/botowrap/badge/?version=latest)](https://botowrap.readthedocs.io/en/latest/?badge=latest)
+[![CodeFactor](https://www.codefactor.io/repository/github/com2cloud/botowrap/badge)](https://www.codefactor.io/repository/github/com2cloud/botowrap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
 

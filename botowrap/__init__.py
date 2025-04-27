@@ -5,7 +5,7 @@ extensions that attach to boto3 sessions. Currently supports enhanced DynamoDB
 client functionality.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from .core import BaseExtension, ExtensionManager
 from .extensions.dynamodb import DynamoDBConfig, DynamoDBExtension

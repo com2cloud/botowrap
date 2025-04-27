@@ -4,12 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py37']
+target-version = ['py38']
+include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 line_length = 100
 known_first_party = ["botowrap"]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
 
 [tool.mypy]
 python_version = "3.8"
@@ -26,6 +32,8 @@ warn_redundant_casts = true
 plugins = []
 mypy_path = "botowrap/types"
 exclude = ["botowrap/.*\\.pyi$"]
+show_error_codes = true
+pretty = true
 
 [[tool.mypy.overrides]]
 module = "boto3.*"
@@ -38,9 +46,22 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+addopts = """
+    --strict-markers
+    --tb=short
+    --cov=botowrap
+    --cov-report=term-missing
+    --cov-report=html
+    --cov-fail-under=80
+"""
+markers = [
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
 
 [tool.ruff]
 line-length = 100
+target-version = "py38"
 exclude = [
     ".git",
     "__pycache__",
@@ -48,19 +69,51 @@ exclude = [
     "botowrap/cli.pyi",
     "botowrap/__init__.pyi",
     "venv",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    "dist",
+    "build",
 ]
+
 [tool.ruff.lint]
-
 select = [
-    "E501",  # line length
-    "F401",  # unused import
-    "F841",  # local variable assigned but never used
-    "F403",  # 'from module import *' used; unable to detect undefined names
-    "F405",  # name may be undefined, or defined from star imports: module
-    "F821",  # undefined name
-    "E722",  # do not use bare 'except',
-    "E402",  # module level import not at top of file
-    "D",
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "D",   # pydocstyle
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "RUF", # ruff-specific rules
 ]
 
-ignore = ["E231"]
+ignore = [
+    "E231",  # Missing whitespace after ','
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.coverage.run]
+source = ["botowrap"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
