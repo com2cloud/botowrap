@@ -1,6 +1,6 @@
 # botowrap
 
-[![Python Package](https://github.com/com2cloud/botowrap/actions/workflows/python-package.yml/badge.svg)](https://github.com/com2cloud/botowrap/actions/workflows/python-package.yml)
+[![Python Package](https://github.com/com2cloud/botowrap/actions/workflows/release.yml/badge.svg)](https://github.com/com2cloud/botowrap/actions/workflows/release.yml)
 [![PyPI version](https://badge.fury.io/py/botowrap.svg)](https://badge.fury.io/py/botowrap)
 [![PyPI downloads](https://img.shields.io/pypi/dm/botowrap.svg)](https://pypi.org/project/botowrap/)
 [![Codecov](https://codecov.io/gh/com2cloud/botowrap/branch/main/graph/badge.svg)](https://codecov.io/gh/com2cloud/botowrap)
@@ -163,11 +163,11 @@ ddb_config = DynamoDBConfig(
 
 ## Developing
 
-* New service wrappers live under `botowrap/extensions/`
-* Base classes and manager logic are in `core.py`
-* Extensions must implement:
-  * `attach(session)` - Adds functionality to the boto3 session
-  * `detach(session)` - Removes functionality from the boto3 session
+- New service wrappers live under `botowrap/extensions/`
+- Base classes and manager logic are in `core.py`
+- Extensions must implement:
+  - `attach(session)` - Adds functionality to the boto3 session
+  - `detach(session)` - Removes functionality from the boto3 session
 
 ### Creating an Extension
 
