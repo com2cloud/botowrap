@@ -4,10 +4,11 @@ pytest-cov>=2.10.0
 mypy>=0.800
 black>=22.3.0
 isort>=5.0.0
-flake8>=3.8.0
+ruff>=0.0.292
 moto>=2.0.0
 sphinx>=4.0.0
 sphinx-rtd-theme>=1.0.0
 twine>=3.4.0
 build>=0.7.0
 pre-commit>=2.15.0
+types-setuptools

@@ -120,3 +120,4 @@ dmypy.json
 # macOS
 .DS_Store
 CLAUDE.md
+cursor.md

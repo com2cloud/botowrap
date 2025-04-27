@@ -28,13 +28,13 @@ You can create your own extensions by subclassing the BaseExtension class:
 
     class MyCustomExtension(BaseExtension):
         """Custom extension for XYZ service."""
-        
+
         SERVICE = 'xyz'  # The AWS service name
-        
+
         def __init__(self, config):
             self.config = config
             self._client_instances = []
-        
+
         def attach(self, session: BotoSession) -> None:
             """Attach this extension to the session."""
             session.events.register(
@@ -42,7 +42,7 @@ You can create your own extensions by subclassing the BaseExtension class:
                 self._attach_mixin,
                 unique_id='xyz-bootstrap'
             )
-        
+
         def detach(self, session: BotoSession) -> None:
             """Detach this extension from the session."""
             session.events.unregister(
@@ -52,11 +52,11 @@ You can create your own extensions by subclassing the BaseExtension class:
             # Clean up any instance handlers
             for client in self._client_instances:
                 self._unregister_instance_handlers(client)
-        
+
         def _attach_mixin(self, class_attrs: Dict[str, Any], base_classes: list, **_):
             """Add mixin to the client class."""
             base_classes.insert(0, MyCustomMixin)
-        
+
         def _unregister_instance_handlers(self, client):
             """Clean up any handlers registered on the client."""
             # Unregister any instance-specific handlers
@@ -66,10 +66,10 @@ You can create your own extensions by subclassing the BaseExtension class:
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             # Add your functionality here
-            
+
     # Then register and use your extension:
     from botowrap.core import ExtensionManager
-    
+
     mgr = ExtensionManager()
     mgr.register(MyCustomExtension(config))
     mgr.bootstrap()

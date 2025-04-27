@@ -1,0 +1,107 @@
+version: 2
+
+sphinx:
+  configuration: docs/conf.py
+
+python:
+  version: "3.9"
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.9"
+
+branches:
+  - main
+  - master
+  - /release/
+  - /v\d+\.\d+\.\d+/
+
+tags:
+  - /v\d+\.\d+\.\d+/
+
+language:
+  - en
+
+formats:
+  - html
+  - pdf
+  - epub
+
+themes:
+  - sphinx_rtd_theme
+
+extensions:
+  - sphinx.ext.autodoc
+  - sphinx.ext.napoleon
+  - sphinx.ext.viewcode
+  - sphinx.ext.intersphinx
+  - sphinx.ext.todo
+  - sphinx.ext.coverage
+  - sphinx.ext.mathjax
+  - sphinx_rtd_theme
+
+search:
+  - sphinx
+  - elasticsearch
+
+analytics:
+  - google
+  - piwik
+
+notifications:
+  - email
+  - slack
+
+integrations:
+  - github
+  - gitlab
+  - bitbucket
+
+deploy:
+  - github
+  - gitlab
+  - bitbucket
+
+environments:
+  - development
+  - staging
+  - production
+
+platforms:
+  - linux
+  - macos
+  - windows
+
+architectures:
+  - x86_64
+  - arm64
+
+dependencies:
+  - sphinx
+  - sphinx-rtd-theme
+  - sphinx-autodoc-typehints
+  - sphinx-copybutton
+  - sphinx-prompt
+  - sphinx-tabs
+  - sphinx-togglebutton
+  - sphinxcontrib-mermaid
+  - sphinxcontrib-plantuml
+  - sphinxcontrib-programoutput
+  - sphinxcontrib-spelling
+  - sphinxcontrib-svg2pdf
+  - sphinxcontrib-websupport
+  - sphinxcontrib-youtube
+  - myst-parser
+  - docutils
+  - jinja2
+  - markupsafe
+  - pygments
+  - requests
+  - six
+  - snowballstemmer
