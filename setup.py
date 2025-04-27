@@ -46,6 +46,10 @@ setup(
             "pre-commit>=3.0.0",
             "types-setuptools",
         ],
+        "docs": [
+            "sphinx>=4.0.0",
+            "sphinx-rtd-theme>=1.0.0",
+        ],
     },
     package_data={
         "botowrap": [
