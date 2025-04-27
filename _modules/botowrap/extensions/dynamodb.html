@@ -1,0 +1,641 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>botowrap.extensions.dynamodb &mdash; botowrap 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=87f11076"></script>
+      <script src="../../../_static/doctools.js?v=888ff710"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            botowrap
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../extensions.html">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">botowrap</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">botowrap.extensions.dynamodb</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for botowrap.extensions.dynamodb</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;DynamoDB extension for botowrap.</span>
+
+<span class="sd">Provides enhanced DynamoDB client functionality with automatic serialization/deserialization,</span>
+<span class="sd">timestamp management, pagination helpers, and retry logic.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">boto3.dynamodb.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeDeserializer</span><span class="p">,</span> <span class="n">TypeSerializer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">boto3.session</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span> <span class="k">as</span> <span class="n">BotoSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botocore.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botocore.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClientError</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseExtension</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DynamoDBConfig"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBConfig">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DynamoDBConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration options for the DynamoDB extension.&quot;&quot;&quot;</span>
+
+    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">log_consumed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">add_pagination</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">add_timestamps</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="DynamoDBExtension"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBExtension">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">DynamoDBExtension</span><span class="p">(</span><span class="n">BaseExtension</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Attaches all DynamoDB &quot;document client&quot; behavior onto boto3.client(&#39;dynamodb&#39;).&quot;&quot;&quot;</span>
+
+    <span class="n">SERVICE</span> <span class="o">=</span> <span class="s2">&quot;dynamodb&quot;</span>
+
+<div class="viewcode-block" id="DynamoDBExtension.__init__"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBExtension.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">DynamoDBConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DynamoDB extension with the given configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            config: Configuration options for the DynamoDB extension</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client_instances</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BaseClient</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="DynamoDBExtension.attach"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBExtension.attach">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">attach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">BotoSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attach the DynamoDB extension to the given session.</span>
+
+<span class="sd">        Registers event handlers to add document client functionality to DynamoDB clients</span>
+<span class="sd">        created from this session.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            session: The boto3 session to attach to</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;creating-client-class.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_attach_mixin</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-doc-bootstrap&quot;</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DynamoDBExtension.detach"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBExtension.detach">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">BotoSession</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detach the DynamoDB extension from the given session.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            session: The boto3 session to detach from</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;creating-client-class.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">SERVICE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-doc-bootstrap&quot;</span>
+        <span class="p">)</span>
+        <span class="c1"># also unregister any instance-specific handlers</span>
+        <span class="k">for</span> <span class="n">client</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_instances</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unregister_instance_handlers</span><span class="p">(</span><span class="n">client</span><span class="p">)</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_attach_mixin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Attach DocumentClientBootstrapper to the DynamoDB client class.</span>
+
+<span class="sd">        This method is called when a DynamoDB client class is being created.</span>
+<span class="sd">        It inserts the _DocumentClientBootstrapper class at the beginning</span>
+<span class="sd">        of the client&#39;s base classes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            **kwargs: Keyword arguments from the creating-client-class event</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># when the class is constructed, _DocumentClientBootstrapper will run __init__,</span>
+        <span class="c1"># which in turn registers all the handlers on the new client instance</span>
+        <span class="n">base_classes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;base_classes&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">base_classes</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_DocumentClientBootstrapper</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_unregister_instance_handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BaseClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister all handlers for a specific client instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            client: The client instance to unregister handlers from</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">events</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;creating-client-class.dynamodb&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-pagination&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;provide-client-params.dynamodb.*&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-inject-ts&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;provide-client-params.dynamodb.*&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-serialize&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;after-call.dynamodb.GetItem&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-get&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;after-call.dynamodb.Query&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-query&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;after-call.dynamodb.Scan&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-scan&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;after-call.dynamodb.BatchGetItem&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-batch&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;needs-retry.dynamodb.*&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-retry&quot;</span><span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="s2">&quot;after-call.dynamodb.*&quot;</span><span class="p">,</span> <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-log-cap&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_DocumentClientBootstrapper</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin that wires up all handlers on a new client instance.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the bootstrapper and attach document client functionality.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            *args: Positional arguments to pass to parent initializer</span>
+<span class="sd">            **kwargs: Keyword arguments to pass to parent initializer</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># Cast self to BaseClient since this mixin is intended to be used with BaseClient</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">DynamoDBConfig</span><span class="p">()</span>  <span class="c1"># Add default config</span>
+        <span class="n">DynamoDBDocumentClient</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="s2">&quot;BaseClient&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DynamoDBConfig</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the DynamoDB configuration.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            The DynamoDB configuration</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_retry_throttling</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">endpoint</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">operation</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">attempts</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">caught_exception</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClientError</span><span class="p">],</span>
+        <span class="n">request_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle throttling retries for DynamoDB operations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            response: Response from the service</span>
+<span class="sd">            endpoint: Endpoint used for the request</span>
+<span class="sd">            operation: Operation being performed</span>
+<span class="sd">            attempts: Number of attempts made so far</span>
+<span class="sd">            caught_exception: Exception that was caught, if any</span>
+<span class="sd">            request_dict: Request parameters</span>
+<span class="sd">            **_: Additional keyword arguments</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">            bool: True if the operation should be retried, False otherwise</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">caught_exception</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">caught_exception</span><span class="p">,</span> <span class="s2">&quot;response&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">caught_exception</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Code&quot;</span><span class="p">)</span>
+            <span class="o">==</span> <span class="s2">&quot;ProvisionedThroughputExceededException&quot;</span>
+            <span class="ow">and</span> <span class="n">attempts</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_config</span><span class="p">()</span><span class="o">.</span><span class="n">max_retries</span>
+        <span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">attempts</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_wrap_retry_handler</span><span class="p">(</span><span class="n">handler</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">bool</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a retry handler to satisfy type checking while preserving behavior.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    ----</span>
+<span class="sd">        handler: The original handler that returns a bool</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    -------</span>
+<span class="sd">        A wrapped handler that satisfies the event system&#39;s type hints</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">handler</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">wrapped</span>
+
+
+<div class="viewcode-block" id="DynamoDBDocumentClient"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBDocumentClient">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">DynamoDBDocumentClient</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DynamoDB document client wrapper.</span>
+
+<span class="sd">    This class wraps a botocore DynamoDB client to provide document-style operations.</span>
+<span class="sd">    It handles serialization and deserialization of Python types to/from DynamoDB&#39;s</span>
+<span class="sd">    AttributeValue format, adds pagination helpers, automatic retries for throttling,</span>
+<span class="sd">    and optional features like timestamp injection and capacity logging.</span>
+
+<span class="sd">    The wrapper is automatically attached to new DynamoDB client instances via the</span>
+<span class="sd">    _DocumentClientBootstrapper mixin.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">        client: The underlying botocore DynamoDB client</span>
+<span class="sd">        serializer: TypeSerializer for converting Python types to DynamoDB format</span>
+<span class="sd">        deserializer: TypeDeserializer for converting DynamoDB format to Python types</span>
+<span class="sd">        config: Configuration options for the DynamoDB extension</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DynamoDBDocumentClient.__init__"><a class="viewcode-back" href="../../../api_reference.html#botowrap.extensions.dynamodb.DynamoDBDocumentClient.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">:</span> <span class="n">BaseClient</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize DynamoDB document client wrapper.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            client: The DynamoDB client to wrap</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serializer</span> <span class="o">=</span> <span class="n">TypeSerializer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deserializer</span> <span class="o">=</span> <span class="n">TypeDeserializer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">client</span><span class="p">,</span> <span class="s2">&quot;_config&quot;</span><span class="p">,</span> <span class="n">DynamoDBConfig</span><span class="p">()</span>
+        <span class="p">)</span>  <span class="c1"># Get config from client or use default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register_handlers</span><span class="p">()</span></div>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_handlers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Register event handlers for DynamoDB document client functionality.&quot;&quot;&quot;</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">events</span>
+
+        <span class="c1"># Add pagination helpers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">add_pagination</span><span class="p">:</span>
+            <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;creating-client-class.dynamodb&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_pagination_helpers</span><span class="p">,</span>
+                <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-pagination&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Add timestamp injection</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">add_timestamps</span><span class="p">:</span>
+            <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;provide-client-params.dynamodb.*&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_inject_timestamps</span><span class="p">,</span>
+                <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-inject-ts&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Add serialization</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;provide-client-params.dynamodb.*&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_serialize_params</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-serialize&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add deserialization for different operations</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;after-call.dynamodb.GetItem&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deserialize_item</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-get&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;after-call.dynamodb.Query&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deserialize_multi</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-query&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;after-call.dynamodb.Scan&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deserialize_multi</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-scan&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;after-call.dynamodb.BatchGetItem&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_deserialize_batch</span><span class="p">,</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-deserialize-batch&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add retry handler for throttling</span>
+        <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+            <span class="s2">&quot;needs-retry.dynamodb.*&quot;</span><span class="p">,</span>
+            <span class="n">_wrap_retry_handler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_retry_throttling</span><span class="p">),</span>
+            <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-retry&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Add capacity logging</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_consumed</span><span class="p">:</span>
+            <span class="n">ev</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+                <span class="s2">&quot;after-call.dynamodb.*&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_log_capacity</span><span class="p">,</span>
+                <span class="n">unique_id</span><span class="o">=</span><span class="s2">&quot;dynamodb-log-cap&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_pagination_helpers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_attrs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add pagination helper methods to the DynamoDB client class.</span>
+
+<span class="sd">        Adds query_all and scan_all methods that automatically handle pagination</span>
+<span class="sd">        by collecting all items from multiple requests.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            class_attrs: Dictionary of class attributes to modify</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">query_all</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute a Query operation, automatically handling pagination.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">            ----</span>
+<span class="sd">                self: The DynamoDB client instance</span>
+<span class="sd">                **kw: Keyword arguments to pass to the query method</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            -------</span>
+<span class="sd">                Dict with Items key containing all results</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Items&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">while</span> <span class="s2">&quot;LastEvaluatedKey&quot;</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">:</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">,</span> <span class="n">ExclusiveStartKey</span><span class="o">=</span><span class="n">resp</span><span class="p">[</span><span class="s2">&quot;LastEvaluatedKey&quot;</span><span class="p">])</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Items&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;Items&quot;</span><span class="p">:</span> <span class="n">items</span><span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">scan_all</span><span class="p">(</span><span class="bp">self</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Execute a Scan operation, automatically handling pagination.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">            ----</span>
+<span class="sd">                self: The DynamoDB client instance</span>
+<span class="sd">                **kw: Keyword arguments to pass to the scan method</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            -------</span>
+<span class="sd">                Dict with Items key containing all results</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Items&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">while</span> <span class="s2">&quot;LastEvaluatedKey&quot;</span> <span class="ow">in</span> <span class="n">resp</span><span class="p">:</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">,</span> <span class="n">ExclusiveStartKey</span><span class="o">=</span><span class="n">resp</span><span class="p">[</span><span class="s2">&quot;LastEvaluatedKey&quot;</span><span class="p">])</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Items&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;Items&quot;</span><span class="p">:</span> <span class="n">items</span><span class="p">}</span>
+
+        <span class="n">class_attrs</span><span class="p">[</span><span class="s2">&quot;query_all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">query_all</span>
+        <span class="n">class_attrs</span><span class="p">[</span><span class="s2">&quot;scan_all&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">scan_all</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inject_timestamps</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">operation_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Inject CreatedAt and UpdatedAt timestamps into items.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            params: The parameters for the DynamoDB operation</span>
+<span class="sd">            operation_name: The name of the operation being performed</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">operation_name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;PutItem&quot;</span><span class="p">,</span> <span class="s2">&quot;UpdateItem&quot;</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Item&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">operation_name</span> <span class="o">==</span> <span class="s2">&quot;PutItem&quot;</span><span class="p">:</span>
+                <span class="n">item</span><span class="p">[</span><span class="s2">&quot;CreatedAt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">now</span>
+            <span class="n">item</span><span class="p">[</span><span class="s2">&quot;UpdatedAt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">now</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_serialize_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Serialize Python types to DynamoDB AttributeValue format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            params: The parameters for the DynamoDB operation</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">to_attr</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Convert a Python value to a DynamoDB AttributeValue.</span>
+
+<span class="sd">            Args:</span>
+<span class="sd">            ----</span>
+<span class="sd">                v: The Python value to convert</span>
+
+<span class="sd">            Returns:</span>
+<span class="sd">            -------</span>
+<span class="sd">                A DynamoDB AttributeValue dictionary</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># Use cast to tell mypy that the return value is a Dict[str, Any]</span>
+            <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;Dict[str, Any]&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">serializer</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s2">&quot;Item&quot;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Item&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">to_attr</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Item&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="s2">&quot;Expected&quot;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">_k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;Expected&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s2">&quot;Value&quot;</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">v</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_attr</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="s2">&quot;Value&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s2">&quot;ExpressionAttributeValues&quot;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ExpressionAttributeValues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">to_attr</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;ExpressionAttributeValues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deserialize_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize a single item from DynamoDB format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            http: The HTTP response</span>
+<span class="sd">            parsed: The parsed response data</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;Item&quot;</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+            <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;Item&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deserializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;Item&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deserialize_multi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize multiple items from DynamoDB format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            http: The HTTP response</span>
+<span class="sd">            parsed: The parsed response data</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;Items&quot;</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+            <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;Items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deserializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;Items&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deserialize_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deserialize items from a batch operation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            http: The HTTP response</span>
+<span class="sd">            parsed: The parsed response data</span>
+<span class="sd">            **_: Additional keyword arguments (ignored)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_table_name</span><span class="p">,</span> <span class="n">table_data</span> <span class="ow">in</span> <span class="n">parsed</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Responses&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s2">&quot;Items&quot;</span> <span class="ow">in</span> <span class="n">table_data</span><span class="p">:</span>
+                <span class="n">table_data</span><span class="p">[</span><span class="s2">&quot;Items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deserializer</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">table_data</span><span class="p">[</span><span class="s2">&quot;Items&quot;</span><span class="p">]</span>
+                <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_retry_throttling</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">endpoint</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">operation</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">attempts</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">caught_exception</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClientError</span><span class="p">],</span>
+        <span class="n">request_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Handle throttling retries for DynamoDB operations.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            response: Response from the service</span>
+<span class="sd">            endpoint: Endpoint used for the request</span>
+<span class="sd">            operation: Operation being performed</span>
+<span class="sd">            attempts: Number of attempts made so far</span>
+<span class="sd">            caught_exception: Exception that was caught, if any</span>
+<span class="sd">            request_dict: Request parameters</span>
+<span class="sd">            **_: Additional keyword arguments</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">            bool: True if the operation should be retried, False otherwise</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">caught_exception</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">caught_exception</span><span class="p">,</span> <span class="s2">&quot;response&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">caught_exception</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Error&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Code&quot;</span><span class="p">)</span>
+            <span class="o">==</span> <span class="s2">&quot;ProvisionedThroughputExceededException&quot;</span>
+            <span class="ow">and</span> <span class="n">attempts</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_retries</span>
+        <span class="p">):</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">attempts</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">http</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">_</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log consumed capacity information from DynamoDB responses.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">        ----</span>
+<span class="sd">            parsed: Parsed response data</span>
+<span class="sd">            model: Operation model</span>
+<span class="sd">            http: HTTP response object (optional)</span>
+<span class="sd">            **_: Additional keyword arguments</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">log_consumed</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="s2">&quot;ConsumedCapacity&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">capacity</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s2">&quot;ConsumedCapacity&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">capacity</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">table_capacity</span> <span class="ow">in</span> <span class="n">capacity</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;DynamoDB consumed capacity for table </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="n">table_capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TableName&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">),</span>
+                    <span class="n">table_capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CapacityUnits&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;DynamoDB consumed capacity for table </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TableName&quot;</span><span class="p">,</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">),</span>
+                <span class="n">capacity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CapacityUnits&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Denys Melnyk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

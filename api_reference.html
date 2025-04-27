@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; botowrap 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=87f11076"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Extensions" href="extensions.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            botowrap
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-botowrap.core">Core Module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#botowrap.core.BaseExtension"><code class="docutils literal notranslate"><span class="pre">BaseExtension</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.BaseExtension.attach"><code class="docutils literal notranslate"><span class="pre">BaseExtension.attach()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.BaseExtension.detach"><code class="docutils literal notranslate"><span class="pre">BaseExtension.detach()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#botowrap.core.ExtensionManager"><code class="docutils literal notranslate"><span class="pre">ExtensionManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.ExtensionManager.__init__"><code class="docutils literal notranslate"><span class="pre">ExtensionManager.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.ExtensionManager.register"><code class="docutils literal notranslate"><span class="pre">ExtensionManager.register()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.ExtensionManager.bootstrap"><code class="docutils literal notranslate"><span class="pre">ExtensionManager.bootstrap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.core.ExtensionManager.teardown"><code class="docutils literal notranslate"><span class="pre">ExtensionManager.teardown()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dynamodb-extension">DynamoDB Extension</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig"><code class="docutils literal notranslate"><span class="pre">DynamoDBConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig.max_retries"><code class="docutils literal notranslate"><span class="pre">DynamoDBConfig.max_retries</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig.log_consumed"><code class="docutils literal notranslate"><span class="pre">DynamoDBConfig.log_consumed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig.add_pagination"><code class="docutils literal notranslate"><span class="pre">DynamoDBConfig.add_pagination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig.add_timestamps"><code class="docutils literal notranslate"><span class="pre">DynamoDBConfig.add_timestamps</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBExtension"><code class="docutils literal notranslate"><span class="pre">DynamoDBExtension</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBExtension.SERVICE"><code class="docutils literal notranslate"><span class="pre">DynamoDBExtension.SERVICE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBExtension.__init__"><code class="docutils literal notranslate"><span class="pre">DynamoDBExtension.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBExtension.attach"><code class="docutils literal notranslate"><span class="pre">DynamoDBExtension.attach()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBExtension.detach"><code class="docutils literal notranslate"><span class="pre">DynamoDBExtension.detach()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBDocumentClient"><code class="docutils literal notranslate"><span class="pre">DynamoDBDocumentClient</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBDocumentClient.__init__"><code class="docutils literal notranslate"><span class="pre">DynamoDBDocumentClient.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">botowrap</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this heading"></a></h1>
+<section id="module-botowrap.core">
+<span id="core-module"></span><h2>Core Module<a class="headerlink" href="#module-botowrap.core" title="Permalink to this heading"></a></h2>
+<p>Core functionality for botowrap extensions.</p>
+<p>Provides base classes and managers for extending boto3 clients.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="botowrap.core.BaseExtension">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">botowrap.core.</span></span><span class="sig-name descname"><span class="pre">BaseExtension</span></span><a class="reference internal" href="_modules/botowrap/core.html#BaseExtension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.BaseExtension" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for all client-extension wrappers.</p>
+<p>Subclasses must implement attach(session) and detach(session).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.BaseExtension.attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/core.html#BaseExtension.attach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.BaseExtension.attach" title="Permalink to this definition"></a></dt>
+<dd><p>Attach this extension to the given boto3 session.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.BaseExtension.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/core.html#BaseExtension.detach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.BaseExtension.detach" title="Permalink to this definition"></a></dt>
+<dd><p>Detach this extension from the given boto3 session.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="botowrap.core.ExtensionManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">botowrap.core.</span></span><span class="sig-name descname"><span class="pre">ExtensionManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/botowrap/core.html#ExtensionManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.ExtensionManager" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Holds and bootstraps a collection of BaseExtension instances.</p>
+<p>Initialize with an optional boto3 session.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.ExtensionManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/botowrap/core.html#ExtensionManager.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.ExtensionManager.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize with an optional boto3 session.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.ExtensionManager.register">
+<span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#botowrap.core.BaseExtension" title="botowrap.core.BaseExtension"><span class="pre">BaseExtension</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/core.html#ExtensionManager.register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.ExtensionManager.register" title="Permalink to this definition"></a></dt>
+<dd><p>Add an extension to be bootstrapped.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.ExtensionManager.bootstrap">
+<span class="sig-name descname"><span class="pre">bootstrap</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/core.html#ExtensionManager.bootstrap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.ExtensionManager.bootstrap" title="Permalink to this definition"></a></dt>
+<dd><p>Attach all registered extensions to the session.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.core.ExtensionManager.teardown">
+<span class="sig-name descname"><span class="pre">teardown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/core.html#ExtensionManager.teardown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.core.ExtensionManager.teardown" title="Permalink to this definition"></a></dt>
+<dd><p>Detach all registered extensions (e.g. for tests).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="dynamodb-extension">
+<h2>DynamoDB Extension<a class="headerlink" href="#dynamodb-extension" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-botowrap.extensions.dynamodb"></span><p>DynamoDB extension for botowrap.</p>
+<p>Provides enhanced DynamoDB client functionality with automatic serialization/deserialization,
+timestamp management, pagination helpers, and retry logic.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">botowrap.extensions.dynamodb.</span></span><span class="sig-name descname"><span class="pre">DynamoDBConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_retries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_consumed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_pagination</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_timestamps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBConfig" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration options for the DynamoDB extension.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBConfig.max_retries">
+<span class="sig-name descname"><span class="pre">max_retries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBConfig.max_retries" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBConfig.log_consumed">
+<span class="sig-name descname"><span class="pre">log_consumed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBConfig.log_consumed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBConfig.add_pagination">
+<span class="sig-name descname"><span class="pre">add_pagination</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBConfig.add_pagination" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBConfig.add_timestamps">
+<span class="sig-name descname"><span class="pre">add_timestamps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBConfig.add_timestamps" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBExtension">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">botowrap.extensions.dynamodb.</span></span><span class="sig-name descname"><span class="pre">DynamoDBExtension</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig" title="botowrap.extensions.dynamodb.DynamoDBConfig"><span class="pre">DynamoDBConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBExtension"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBExtension" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#botowrap.core.BaseExtension" title="botowrap.core.BaseExtension"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseExtension</span></code></a></p>
+<p>Attaches all DynamoDB “document client” behavior onto boto3.client(‘dynamodb’).</p>
+<p>Initialize DynamoDB extension with the given configuration.</p>
+<section id="args">
+<h3>Args:<a class="headerlink" href="#args" title="Permalink to this heading"></a></h3>
+<blockquote>
+<div><p>config: Configuration options for the DynamoDB extension</p>
+</div></blockquote>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBExtension.SERVICE">
+<span class="sig-name descname"><span class="pre">SERVICE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'dynamodb'</span></em><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBExtension.SERVICE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBExtension.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#botowrap.extensions.dynamodb.DynamoDBConfig" title="botowrap.extensions.dynamodb.DynamoDBConfig"><span class="pre">DynamoDBConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBExtension.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBExtension.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize DynamoDB extension with the given configuration.</p>
+<section id="id1">
+<h4>Args:<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h4>
+<blockquote>
+<div><p>config: Configuration options for the DynamoDB extension</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBExtension.attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBExtension.attach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBExtension.attach" title="Permalink to this definition"></a></dt>
+<dd><p>Attach the DynamoDB extension to the given session.</p>
+<p>Registers event handlers to add document client functionality to DynamoDB clients
+created from this session.</p>
+<section id="id2">
+<h4>Args:<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h4>
+<blockquote>
+<div><p>session: The boto3 session to attach to</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBExtension.detach">
+<span class="sig-name descname"><span class="pre">detach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session" title="(in Boto3 v1.38.3)"><span class="pre">Session</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBExtension.detach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBExtension.detach" title="Permalink to this definition"></a></dt>
+<dd><p>Detach the DynamoDB extension from the given session.</p>
+<section id="id3">
+<h4>Args:<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h4>
+<blockquote>
+<div><p>session: The boto3 session to detach from</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBDocumentClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">botowrap.extensions.dynamodb.</span></span><span class="sig-name descname"><span class="pre">DynamoDBDocumentClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseClient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBDocumentClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBDocumentClient" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>DynamoDB document client wrapper.</p>
+<p>This class wraps a botocore DynamoDB client to provide document-style operations.
+It handles serialization and deserialization of Python types to/from DynamoDB’s
+AttributeValue format, adds pagination helpers, automatic retries for throttling,
+and optional features like timestamp injection and capacity logging.</p>
+<p>The wrapper is automatically attached to new DynamoDB client instances via the
+_DocumentClientBootstrapper mixin.</p>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Permalink to this heading"></a></h3>
+<blockquote>
+<div><p>client: The underlying botocore DynamoDB client
+serializer: TypeSerializer for converting Python types to DynamoDB format
+deserializer: TypeDeserializer for converting DynamoDB format to Python types
+config: Configuration options for the DynamoDB extension</p>
+</div></blockquote>
+<p>Initialize DynamoDB document client wrapper.</p>
+</section>
+<section id="id4">
+<h3>Args:<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<blockquote>
+<div><p>client: The DynamoDB client to wrap</p>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="botowrap.extensions.dynamodb.DynamoDBDocumentClient.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BaseClient</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></span></span><a class="reference internal" href="_modules/botowrap/extensions/dynamodb.html#DynamoDBDocumentClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#botowrap.extensions.dynamodb.DynamoDBDocumentClient.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize DynamoDB document client wrapper.</p>
+<section id="id5">
+<h4>Args:<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h4>
+<blockquote>
+<div><p>client: The DynamoDB client to wrap</p>
+</div></blockquote>
+</section>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="extensions.html" class="btn btn-neutral float-right" title="Extensions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Denys Melnyk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

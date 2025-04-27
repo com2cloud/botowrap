@@ -1,0 +1,242 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; botowrap 0.1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=87f11076"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            botowrap
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extension-configuration">Extension Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advanced-usage">Advanced Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#using-multiple-extensions">Using Multiple Extensions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-a-custom-session">Using a Custom Session</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extensions.html">Extensions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">botowrap</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<section id="basic-usage">
+<h2>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this heading"></a></h2>
+<p>Here’s a basic example of how to use botowrap:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">boto3</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtensionManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.extensions.dynamodb</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynamoDBExtension</span><span class="p">,</span> <span class="n">DynamoDBConfig</span>
+
+<span class="c1"># Set up logging to see the enhancements in action</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="c1"># 1) Create an extension manager (uses the default boto3 session)</span>
+<span class="n">mgr</span> <span class="o">=</span> <span class="n">ExtensionManager</span><span class="p">()</span>
+
+<span class="c1"># 2) Configure and register the DynamoDB extension</span>
+<span class="n">ddb_config</span> <span class="o">=</span> <span class="n">DynamoDBConfig</span><span class="p">(</span>
+    <span class="n">max_retries</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">log_consumed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">add_pagination</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">add_timestamps</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">mgr</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">DynamoDBExtension</span><span class="p">(</span><span class="n">ddb_config</span><span class="p">))</span>
+
+<span class="c1"># 3) Bootstrap the extensions (this enhances boto3 clients)</span>
+<span class="n">mgr</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">()</span>
+
+<span class="c1"># Now any DynamoDB client you create will have all the enhancements</span>
+<span class="n">ddb</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;dynamodb&#39;</span><span class="p">)</span>
+
+<span class="c1"># Use native Python types - automatic serialization</span>
+<span class="n">ddb</span><span class="o">.</span><span class="n">put_item</span><span class="p">(</span>
+    <span class="n">TableName</span><span class="o">=</span><span class="s1">&#39;Users&#39;</span><span class="p">,</span>
+    <span class="n">Item</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;UserId&#39;</span><span class="p">:</span> <span class="s1">&#39;alice&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Age&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+        <span class="s1">&#39;Active&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s1">&#39;Metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;LastLogin&#39;</span><span class="p">:</span> <span class="s1">&#39;2023-01-01&#39;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Get item returns deserialized Python types</span>
+<span class="n">user</span> <span class="o">=</span> <span class="n">ddb</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span>
+    <span class="n">TableName</span><span class="o">=</span><span class="s1">&#39;Users&#39;</span><span class="p">,</span>
+    <span class="n">Key</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;UserId&#39;</span><span class="p">:</span> <span class="s1">&#39;alice&#39;</span><span class="p">}</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s1">&#39;Item&#39;</span><span class="p">])</span>  <span class="c1"># Python dict with native types</span>
+
+<span class="c1"># Use pagination helpers</span>
+<span class="n">all_users</span> <span class="o">=</span> <span class="n">ddb</span><span class="o">.</span><span class="n">scan_all</span><span class="p">(</span><span class="n">TableName</span><span class="o">=</span><span class="s1">&#39;Users&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">all_users</span><span class="p">[</span><span class="s1">&#39;Items&#39;</span><span class="p">])</span>  <span class="c1"># All items in one response</span>
+</pre></div>
+</div>
+</section>
+<section id="extension-configuration">
+<h2>Extension Configuration<a class="headerlink" href="#extension-configuration" title="Permalink to this heading"></a></h2>
+<p>Each extension in botowrap can be configured to suit your specific needs. For example, the DynamoDB extension
+can be configured with these options:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ddb_config</span> <span class="o">=</span> <span class="n">DynamoDBConfig</span><span class="p">(</span>
+    <span class="c1"># Number of retries for throttling exceptions</span>
+    <span class="n">max_retries</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+
+    <span class="c1"># Whether to log DynamoDB consumed capacity</span>
+    <span class="n">log_consumed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Add pagination helpers (scan_all, query_all)</span>
+    <span class="n">add_pagination</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+
+    <span class="c1"># Add automatic CreatedAt/UpdatedAt timestamps</span>
+    <span class="n">add_timestamps</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="advanced-usage">
+<h2>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Permalink to this heading"></a></h2>
+<section id="using-multiple-extensions">
+<h3>Using Multiple Extensions<a class="headerlink" href="#using-multiple-extensions" title="Permalink to this heading"></a></h3>
+<p>You can register multiple extensions with the same manager:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtensionManager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.extensions.dynamodb</span><span class="w"> </span><span class="kn">import</span> <span class="n">DynamoDBExtension</span><span class="p">,</span> <span class="n">DynamoDBConfig</span>
+
+<span class="c1"># Create manager</span>
+<span class="n">mgr</span> <span class="o">=</span> <span class="n">ExtensionManager</span><span class="p">()</span>
+
+<span class="c1"># Register DynamoDB extension</span>
+<span class="n">mgr</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">DynamoDBExtension</span><span class="p">(</span><span class="n">DynamoDBConfig</span><span class="p">()))</span>
+
+<span class="c1"># Register other extensions as they become available</span>
+<span class="c1"># mgr.register(OtherExtension(OtherConfig()))</span>
+
+<span class="c1"># Bootstrap all extensions</span>
+<span class="n">mgr</span><span class="o">.</span><span class="n">bootstrap</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="using-a-custom-session">
+<h3>Using a Custom Session<a class="headerlink" href="#using-a-custom-session" title="Permalink to this heading"></a></h3>
+<p>If you need to use a specific boto3 session:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">boto3</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">botowrap.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExtensionManager</span>
+
+<span class="c1"># Create a custom session</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span>
+    <span class="n">region_name</span><span class="o">=</span><span class="s1">&#39;us-west-2&#39;</span><span class="p">,</span>
+    <span class="n">profile_name</span><span class="o">=</span><span class="s1">&#39;development&#39;</span>
+<span class="p">)</span>
+
+<span class="c1"># Create manager with the custom session</span>
+<span class="n">mgr</span> <span class="o">=</span> <span class="n">ExtensionManager</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+
+<span class="c1"># Register and bootstrap extensions as normal</span>
+<span class="c1"># ...</span>
+
+<span class="c1"># Now create clients using your session</span>
+<span class="n">ddb</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;dynamodb&#39;</span><span class="p">)</span>  <span class="c1"># Enhanced client</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Denys Melnyk.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
