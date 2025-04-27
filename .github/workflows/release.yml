@@ -1,0 +1,56 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build
+        
+    - name: Build package
+      run: |
+        python -m build
+    
+    - name: Extract release notes from CHANGELOG
+      id: get_changelog
+      run: |
+        VERSION="${GITHUB_REF#refs/tags/v}"
+        # Extract the section for this version from CHANGELOG.md
+        SECTION=$(awk -v ver="## \\[${VERSION}\\]" '/^## \[[0-9]+\.[0-9]+\.[0-9]+\]/ {p=0} $0 ~ ver {p=1} p' CHANGELOG.md | tail -n +2)
+        # Make the output multiline
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        echo "$SECTION" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body: |
+          # Release ${{ github.ref_name }}
+          
+          ${{ steps.get_changelog.outputs.changelog }}
+          
+          ## Installation
+          ```
+          pip install botowrap==${github.ref_name#v}
+          ```
+        files: |
+          dist/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
