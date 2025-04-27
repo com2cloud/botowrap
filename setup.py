@@ -44,6 +44,7 @@ setup(
             "twine>=3.4.0",
             "build>=0.7.0",
             "pre-commit>=3.0.0",
+            "types-setuptools",
         ],
     },
     package_data={
